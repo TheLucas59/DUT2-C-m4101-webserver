@@ -1,0 +1,11 @@
+# Réponses - Bastien CORTEQUISSE, Loïc DEMAY, Lucas PLÉ
+
+# Question 3.2.1 : Test de votre programme
+
+1. Comme on a fermé alors que la connexion était encore active, lors de la réouverture le serveur ne peut pas se bind a la socket : `Address already in use`.
+
+2. L'option `-z` désactive les entrées sorties, donc le message de bienvenue ne s'affiche pas.
+
+3. Ca ne fonctionne pas car telnet ne peut pas résoudre l'ip `::1`.
+
+4. Le deuxième client ne pourra se connecter que quand le premier coupera sa connexion au serveur.
