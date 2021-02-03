@@ -3,9 +3,17 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <signal.h>
 #include "socket.h"
 #define PORT 8080
 #define BUFF_LENGTH 50
+
+void initialiser_signaux(void){
+	if(signal(SIGPIPE, SIG_IGN) == SIG_ERR){
+		perror("Signal 04 SIGPIPE");
+	}
+}
+
 
 int main(int argc, char** argv) {
   if(argc > 1 && strcmp(argv[1], "-advice") == 0) {
@@ -44,3 +52,4 @@ int main(int argc, char** argv) {
   close(socket_serveur);
   return 0;
 }
+
