@@ -9,9 +9,9 @@
 #define BUFF_LENGTH 50
 
 void initialiser_signaux(void){
-	if(signal(SIGPIPE, SIG_IGN) == SIG_ERR){
-		perror("Signal 04 SIGPIPE");
-	}
+  if(signal(SIGPIPE, SIG_IGN) == SIG_ERR){
+    perror("Signal SIGPIPE");
+  }
 }
 
 
@@ -21,6 +21,8 @@ int main(int argc, char** argv) {
     return 42;
   }
   printf("Need an advice ?\n");
+
+  initialiser_signaux();
 
   int socket_serveur = creer_serveur(PORT);
   int socket_client;
