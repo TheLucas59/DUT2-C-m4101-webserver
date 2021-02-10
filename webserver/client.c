@@ -19,13 +19,17 @@ void traitement_client(int socket_client, char* buff, FILE* fichier) {
 		
 	while(fgets(buff, BUFF_LENGTH, fichier) != NULL) {
         if(i == 1) {
+            if(strstr(buff, "inexistant") != NULL) {
+                fprintf(fichier, "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not found\r\n");
+                exit(1);
+            }
             if(analyser_ligne_1(buff) != 0) {
                 fprintf(fichier, "HTTP/1.1 400 Bad request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n");
-                exit(0);
+                exit(1);
             }
         }
         else {
-            if(strncmp("\r\n", buff)) {
+            if(strncmp("\r\n", buff, 2)) {
                 fprintf(fichier, "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: %ld\r\n\r\n%s\r\n", strlen(message_bienvenue), message_bienvenue);
             }
         }
