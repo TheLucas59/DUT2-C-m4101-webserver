@@ -9,3 +9,13 @@
 3. Ca ne fonctionne pas car telnet ne peut pas résoudre l'ip `::1`.
 
 4. Le deuxième client ne pourra se connecter que quand le premier coupera sa connexion au serveur.
+
+# Question 5.2.1 : Manipulations préliminaires
+
+3.  GET / HTTP/1.1
+    Host: localhost:8080
+    User-Agent: curl/7.64.0
+    Accept: */*
+
+4. La première ligne d'une requête HTTP est composée d'abord de la méthode HTTP appliquée, la cible de la requête puis la version du protocole HTTP.
+   (method token, request-target, protocol version)
