@@ -1,0 +1,1 @@
+void traitement_client(int socket_client, char* buff, FILE* fichier);
