@@ -1,7 +1,7 @@
 #include "socket.h"
 #include "client.h"
 #define PORT 8080
-#define BUFF_LENGTH 50
+#define BUFF_LENGTH 1024
 
 void traitement_signal(int sig) {
 	printf("Signal %d reçu\n", sig);

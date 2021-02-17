@@ -1,7 +1,7 @@
 CC=gcc
 LD=gcc
 CFLAGS=-Wall -W -Werror
-LDFLAGS=
+LDFLAGS=-lhttp_parse -L ../parselib
 
 EXE=pawnee
 
@@ -15,7 +15,7 @@ OBJS=$(CFILES:.c=.o)
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	$(LD) $^ $(LDFLAGS)-o $@
+	$(LD) $^ $(LDFLAGS) -o $@
 
 makefile.dep: $(CFILES) $(HEADERS)
 	$(CC) -MM $(CFILES) > $@

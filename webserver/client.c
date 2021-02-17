@@ -1,7 +1,7 @@
 #include "socket.h"
 #include "client.h"
 #include "../parselib/http_parse.h"
-#define BUFF_LENGTH 50
+#define BUFF_LENGTH 1024
 
 char* fgets_or_exit(char* buffer, int size, FILE* stream) {
     if(fgets(buffer, size, stream) == NULL) {
@@ -10,25 +10,48 @@ char* fgets_or_exit(char* buffer, int size, FILE* stream) {
     return buffer;
 }
 
-void traitement_client(int socket_client, char* buff, FILE* fichier) {
-    int exitFlag = 0;
+void skip_headers(FILE* client) {
+    char buff[BUFF_LENGTH];
+    fgets_or_exit(buff, BUFF_LENGTH, client);
+    while(!(buff[0] == '\n' || (buff[0] == '\r' && buff[1] == '\n'))) {
+        fgets_or_exit(buff, BUFF_LENGTH, client);
+    }
+}
+
+void send_status(FILE* client, int code, const char* reason_phrase) {
+    fprintf(client, "HTTP/1.1 %d %s\r\n", code, reason_phrase);
+}
+
+void send_response(FILE* client, int code, const char* reason_phrase, const char* message_body) {
+    send_status(client, code, reason_phrase);
+    fprintf(client, "Connection: close\r\nContent-Length: %ld\n\r\n", strlen(message_body));
+    fprintf(client, "%s", message_body);
+}
+
+void traitement_client(int socket_client, char* buff, FILE* client) {
     if(socket_client == -1) {
 		perror("accept socket client");
     }
 
 	printf("Connexion établie\n");
 	
-    http_request* req = (http_request*) malloc(sizeof(http_request));
+    const char* bvn = "Bienvenue !\n";
 
-    fgets_or_exit(buff, BUFF_LENGTH, fichier);
-    if(parse_http_request(buff, req) == !0){
-        // bad req
-        fprintf(fichier, "HTTP/1.1 400 Bad request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n");
-        exitFlag = 1;
-    } else {
-        // good req
-        fprintf(fichier, "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: %ld\r\n\r\n%s\r\n", strlen("iiiii"), "iiiii\r\n");
-    }
-    free(req);
-    exit(exitFlag);
+    http_request req;
+
+    fgets_or_exit(buff, BUFF_LENGTH, client);
+    int parse = parse_http_request(buff, &req);
+    skip_headers(client);
+    if(parse == -1) {
+        if(req.method == HTTP_UNSUPPORTED) 
+            send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
+        else
+            send_response(client, 400, "Bad Request", "Bad Request\r\n");
+    } 
+    else if (strcmp(req.target, "/") == 0)
+        send_response(client, 200, "OK", bvn);
+    else
+        send_response(client, 404, "Not Found", "Not Found\r\n");
+
+    exit(0);
 }
