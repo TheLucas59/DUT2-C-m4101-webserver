@@ -1,6 +1,5 @@
 #include "socket.h"
 #include "client.h"
-#include "../parselib/http_parse.h"
 #define BUFF_LENGTH 50
 
 int analyser_ligne_1(char* buff) {
