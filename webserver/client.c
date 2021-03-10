@@ -1,5 +1,6 @@
 #include "socket.h"
 #include "client.h"
+#include "utils.h"
 #include "../parselib/http_parse.h"
 #define BUFF_LENGTH 1024
 
@@ -22,66 +23,21 @@ void send_status(FILE* client, int code, const char* reason_phrase) {
     fprintf(client, "HTTP/1.1 %d %s\r\n", code, reason_phrase);
 }
 
-void send_response(FILE* client, int code, const char* reason_phrase, const char* message_body) {
+void send_response(FILE* client, int code, const char* reason_phrase, const char* message_body, FILE* fichier) {
     send_status(client, code, reason_phrase);
-    fprintf(client, "Connection: close\r\nContent-Length: %ld\n\r\n", strlen(message_body));
-    fprintf(client, "%s", message_body);
-}
+    if(fichier != NULL) {
+        fprintf(client, "Connection: close\r\nContent-Length: %d\n\r\n", get_file_size(fichier));
+        fflush(client);
 
-char* rewrite_target(char* target) {
-    if(strcmp(target, "/") == 0){
-        return "/index.html";
+        if(copy(fichier, client) == -1) {
+            perror("Erreur de transmission du fichier");
+            exit(1);
+        }
     }
-    int i = 0;
-    char* res = (char*) malloc(strlen(target)*sizeof(char));
-    while(target[i] != '\0' && target[i] != '?') {
-        res[i] = target[i];
-        i++;
+    else {
+        fprintf(client, "Connection: close\r\nContent-Length: %ld\n\r\n", strlen(message_body));
+        fflush(client);
     }
-    if(target[i] == '?') {
-        res[i] = '\0';
-    }
-    return res;
-}
-
-FILE* check_and_open(const char *target, const char *document_root) {
-    int targetLength = strlen(target);
-    int document_rootLength = strlen(document_root);
-    char path[targetLength + document_rootLength + 1];
-    strcpy(path, document_root);
-    strcat(path, target);
-
-    struct stat stats;
-    stat(path, &stats);
-
-    if((stats.st_mode & S_IFMT) != S_IFREG) {
-        perror("Ce n'est pas un fichier régulier.");
-        return NULL;
-    }
-
-    FILE* file = fopen(path, "r");
-    return file;
-}
-
-int get_file_size(FILE* file) {
-    struct stat stats;
-    int fd = fileno(file);
-    fstat(fd, &stats);
-    return stats.st_size;
-}
-
-int copy(FILE *in, FILE *out) {
-    char buff[get_file_size(in)];
-    if(read(fileno(in), buff, get_file_size(in)) == -1) {
-        perror("Erreur de lecture du fichier");
-        return -1;
-    }
-    if(write(fileno(out), buff, get_file_size(in)) == -1) {
-        perror("Erreur de copie du fichier");
-        return -1;
-    }
-
-    return 0;
 }
 
 void traitement_client(int socket_client, char* buff, FILE* client) {
@@ -90,8 +46,6 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
     }
 
 	printf("Connexion établie\n");
-	
-    const char* bvn = "Bienvenue !\n";
 
     http_request req;
 
@@ -102,26 +56,20 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
     char* target;
     if(parse == -1) {
         if(req.method == HTTP_UNSUPPORTED) {
-            send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
+            send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n", NULL);
         }
         else {
-            send_response(client, 400, "Bad Request", "Bad Request\r\n");
+            send_response(client, 400, "Bad Request", "Bad Request\r\n", NULL);
         }
     } 
     else {
         target = rewrite_target(req.target);
         fichier = check_and_open(target, "./www/");
         if (fichier == NULL){
-            send_response(client, 404, "Not Found", "Not Found\r\n");
+            send_response(client, 404, "Not Found", "Not Found\r\n", NULL);
             exit(1);
         }
-        //int size;
-        //size = get_file_size(fichier);
-        send_response(client, 200, "OK", bvn);
-        if(copy(fichier, client) == -1) {
-            perror("Erreur de transmission du fichier");
-            exit(1);
-        }
+        send_response(client, 200, "OK", NULL, fichier);
     }
     exit(0);
 }
