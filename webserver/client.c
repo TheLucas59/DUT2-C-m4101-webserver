@@ -64,13 +64,18 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
         }
     } 
     else {
+        int status = 0;
         target = rewrite_target(req.target);
-        fichier = check_and_open(target, CONTENT_PATH);
-        if (fichier == NULL){
+        fichier = check_and_open(target, CONTENT_PATH, &status);
+        if (status == 404){
             send_response(client, 404, "Not Found", "Not Found\r\n", NULL);
             exit(1);
         }
-        send_response(client, 200, "OK", NULL, fichier);
+        if(status == 403){
+            send_response(client, 403, "Forbidden", "Forbidden\r\n", NULL);
+            exit(1);
+        }
+        send_response(client, status, "OK", NULL, fichier);
     }
     exit(0);
 }

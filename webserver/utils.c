@@ -16,7 +16,7 @@ char* rewrite_target(char* target) {
     return res;
 }
 
-FILE* check_and_open(const char *target, const char *document_root) {
+FILE* check_and_open(const char *target, const char *document_root, int* status) {
     int targetLength = strlen(target);
     int document_rootLength = strlen(document_root);
     char path[targetLength + document_rootLength + 1];
@@ -28,9 +28,16 @@ FILE* check_and_open(const char *target, const char *document_root) {
 
     if((stats.st_mode & S_IFMT) != S_IFREG) {
         perror("Ce n'est pas un fichier régulier.");
+        *status = 404;
         return NULL;
     }
 
+    if(stats.st_uid == 0){
+        perror("Forbidden");
+        *status = 403;
+        return NULL;
+    }
+    *status = 200;
     FILE* file = fopen(path, "r");
     return file;
 }
