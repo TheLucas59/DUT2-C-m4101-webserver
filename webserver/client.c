@@ -29,9 +29,12 @@ void send_response(FILE* client, int code, const char* reason_phrase, const char
 }
 
 char* rewrite_target(char* target) {
+    if(strcmp(target, "/") == 0){
+        return "/index.html";
+    }
     int i = 0;
-    char* res = (char*) malloc(strlen(target));
-    while(target[i] != '\0' || target[i] != '?') {
+    char* res = (char*) malloc(strlen(target)*sizeof(char));
+    while(target[i] != '\0' && target[i] != '?') {
         res[i] = target[i];
         i++;
     }
@@ -50,7 +53,7 @@ FILE* check_and_open(const char *target, const char *document_root) {
 
     struct stat stats;
     stat(path, &stats);
-    
+
     if((stats.st_mode & S_IFMT) != S_IFREG) {
         perror("Ce n'est pas un fichier régulier.");
         return NULL;
@@ -98,10 +101,6 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
     FILE* fichier = NULL;
     char* target;
     if(parse == -1) {
-        target = rewrite_target(req.target);
-        fichier = check_and_open(target, "../");
-        //int size;
-        //size = get_file_size(fichier);
         if(req.method == HTTP_UNSUPPORTED) {
             send_response(client, 405, "Method Not Allowed", "Method Not Allowed\r\n");
         }
@@ -109,15 +108,20 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
             send_response(client, 400, "Bad Request", "Bad Request\r\n");
         }
     } 
-    else if (strcmp(req.target, "/") == 0) {
+    else {
+        target = rewrite_target(req.target);
+        fichier = check_and_open(target, "./www/");
+        if (fichier == NULL){
+            send_response(client, 404, "Not Found", "Not Found\r\n");
+            exit(1);
+        }
+        //int size;
+        //size = get_file_size(fichier);
         send_response(client, 200, "OK", bvn);
         if(copy(fichier, client) == -1) {
             perror("Erreur de transmission du fichier");
             exit(1);
         }
-    }
-    else {
-        send_response(client, 404, "Not Found", "Not Found\r\n");
     }
     exit(0);
 }

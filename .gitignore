@@ -1,3 +1,4 @@
 **.o
 pawnee
 webserver/makefile.dep
+webserver/www/
