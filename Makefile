@@ -1,4 +1,4 @@
-FOLDERS=webserver parselib
+FOLDERS=parselib webserver
 
 .PHONY: all $(FOLDERS)
 
