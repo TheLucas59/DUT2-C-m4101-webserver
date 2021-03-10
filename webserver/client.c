@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "../parselib/http_parse.h"
 #define BUFF_LENGTH 1024
+#define CONTENT_PATH "./www"
 
 char* fgets_or_exit(char* buffer, int size, FILE* stream) {
     if(fgets(buffer, size, stream) == NULL) {
@@ -64,7 +65,7 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
     } 
     else {
         target = rewrite_target(req.target);
-        fichier = check_and_open(target, "./www/");
+        fichier = check_and_open(target, CONTENT_PATH);
         if (fichier == NULL){
             send_response(client, 404, "Not Found", "Not Found\r\n", NULL);
             exit(1);
