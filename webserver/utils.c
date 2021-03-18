@@ -22,7 +22,8 @@ FILE* check_and_open(const char *target, const char *document_root, int* status)
     char path[targetLength + document_rootLength + 1];
     strcpy(path, document_root);
     strcat(path, target);
-
+	printf("\n%s\n",path);
+	fflush(stdout);
     struct stat stats;
     stat(path, &stats);
 
