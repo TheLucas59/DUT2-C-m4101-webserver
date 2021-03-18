@@ -1,5 +1,6 @@
 #include "socket.h"
 #include "client.h"
+#include "stats.h"
 #define PORT 8080
 #define BUFF_LENGTH 1024
 
@@ -36,6 +37,7 @@ int main(int argc, char** argv) {
 	printf("Need an advice ?\n");
 
 	initialiser_signaux();
+	init_stats();
 
 	int socket_serveur = creer_serveur(PORT);
 	if(socket_serveur == -1){
