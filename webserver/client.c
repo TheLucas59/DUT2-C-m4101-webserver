@@ -27,12 +27,19 @@ void send_status(FILE* client, int code, const char* reason_phrase) {
 
 void send_stats(FILE *client){
 	send_status(client, 200, "OK");
-	fprintf(client,"\n Served connections%d \n",get_stats()->served_connections);
-	fprintf(client,"\n Served requests %d \n",get_stats()->served_requests);
-	fprintf(client,"\n OK 200 %d \n",get_stats()->ok_200);
-	fprintf(client,"\n KO 400 %d \n",get_stats()->ko_400);
-	fprintf(client,"\n KO 403 %d \n",get_stats()->ko_403);
-	fprintf(client,"\n KO 404 %d \n",get_stats()->ko_404);
+	int value=0;
+	sem_getvalue(&get_stats()->served_connections,&value);
+	fprintf(client,"\n Served connections%d \n",value);
+	sem_getvalue(&get_stats()->served_requests,&value);
+	fprintf(client,"\n Served requests %d \n",value);
+	sem_getvalue(&get_stats()->ok_200,&value);
+	fprintf(client,"\n OK 200 %d \n",value);
+	sem_getvalue(&get_stats()->ko_400,&value);
+	fprintf(client,"\n KO 400 %d \n",value);
+	sem_getvalue(&get_stats()->ko_403,&value);
+	fprintf(client,"\n KO 403 %d \n",value);
+	sem_getvalue(&get_stats()->ko_404,&value);
+	fprintf(client,"\n KO 404 %d \n",value);
 }
 
 void send_response(FILE* client, int code, const char* reason_phrase, const char* message_body, FILE* fichier) {
@@ -60,7 +67,7 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
     }
 
 	printf("Connexion établie\n");
-	get_stats()->served_connections++;
+	sem_post(&get_stats()->served_connections);
     http_request req;
 
     fgets_or_exit(buff, BUFF_LENGTH, client);
@@ -74,30 +81,30 @@ void traitement_client(int socket_client, char* buff, FILE* client) {
         }
         else {
             send_response(client, 400, "Bad Request", "Bad Request\r\n", NULL);
-			get_stats()->ko_400++;
+			sem_post(&get_stats()->ko_400);
         }
     } 
     else {
         int status = 0;
         target = rewrite_target(req.target);
 		if(strncmp(target, "/stats", 6)==0){
-			get_stats()->served_requests++;
+			sem_post(&get_stats()->served_requests);
 			send_stats(client);
 		}else{
 			fichier = check_and_open(target, CONTENT_PATH, &status);
-			get_stats()->served_requests++;
+			sem_post(&get_stats()->served_requests);
 			if (status == 404){
 				send_response(client, 404, "Not Found", "Not Found\r\n", NULL);
-				get_stats()->ko_404++;
+				sem_post(&get_stats()->ko_404);
 				exit(1);
 			}
 			if(status == 403){
 				send_response(client, 403, "Forbidden", "Forbidden\r\n", NULL);
-				get_stats()->ko_403++;
+				sem_post(&get_stats()->ko_403);
 				exit(1);
 			}
 			send_response(client, status, "OK", NULL, fichier);
-			get_stats()->ok_200++;
+			sem_post(&get_stats()->ok_200);
 		}
 	}
     exit(0);

@@ -1,7 +1,7 @@
 CC=gcc
 LD=gcc
 CFLAGS=-Wall -W -Werror
-LDFLAGS=-lhttp_parse -L ../parselib
+LDFLAGS=-lhttp_parse -L ../parselib -lpthread
 
 EXE=pawnee
 
